@@ -1,0 +1,181 @@
+{
+    "Nome": "Banco Do Brasil",
+    "Contas": [
+        {
+            "Cliente": 27656326,
+            "Tipo": "Conta_Corrente",
+            "Numero": 1,
+            "Saldo": 9493.5,
+            "Historico": [
+                {
+                    "Tipo": "Deposito",
+                    "Status": "Sucesso",
+                    "Data": "07/07/2026",
+                    "Valor": 20000
+                },
+                {
+                    "Tipo": "Saque",
+                    "Status": "Sucesso",
+                    "Data": "07/07/2026",
+                    "Valor": 10506.5
+                }
+            ],
+            "Estado": "Ativa"
+        },
+        {
+            "Cliente": 11023040,
+            "Tipo": "Conta_Poupanca",
+            "Numero": 2,
+            "Saldo": 7500,
+            "Historico": [
+                {
+                    "Tipo": "Deposito",
+                    "Status": "Sucesso",
+                    "Data": "07/07/2026",
+                    "Valor": 15000
+                },
+                {
+                    "Tipo": "Saque",
+                    "Status": "Sucesso",
+                    "Data": "07/07/2026",
+                    "Valor": 7500
+                }
+            ],
+            "Estado": "Ativa"
+        },
+        {
+            "Cliente": 25454325,
+            "Tipo": "Conta_Universitaria",
+            "Numero": 3,
+            "Saldo": 12000,
+            "Historico": [
+                {
+                    "Tipo": "Deposito",
+                    "Status": "Sucesso",
+                    "Data": "07/07/2026",
+                    "Valor": 12000
+                }
+            ],
+            "Estado": "Ativa"
+        },
+        {
+            "Cliente": 11235545,
+            "Tipo": "Conta_Corrente",
+            "Numero": 4,
+            "Saldo": 4163.5,
+            "Historico": [
+                {
+                    "Tipo": "Deposito",
+                    "Status": "Sucesso",
+                    "Data": "07/07/2026",
+                    "Valor": 10000
+                },
+                {
+                    "Tipo": "Saque",
+                    "Status": "Sucesso",
+                    "Data": "07/07/2026",
+                    "Valor": 5836.5
+                }
+            ],
+            "Estado": "Ativa"
+        },
+        {
+            "Cliente": 16158963,
+            "Tipo": "Conta_Poupanca",
+            "Numero": 5,
+            "Saldo": 1640,
+            "Historico": [
+                {
+                    "Tipo": "Deposito",
+                    "Status": "Sucesso",
+                    "Data": "07/07/2026",
+                    "Valor": 5000
+                },
+                {
+                    "Tipo": "Saque",
+                    "Status": "Sucesso",
+                    "Data": "07/07/2026",
+                    "Valor": 3360
+                }
+            ],
+            "Estado": "Ativa"
+        },
+        {
+            "Cliente": 78981236,
+            "Tipo": "Conta_Universitaria",
+            "Numero": 6,
+            "Saldo": 0,
+            "Historico": [],
+            "Estado": "Ativa"
+        }
+    ],
+    "Clientes": [
+        {
+            "Nome": "Carlos Gutierrez",
+            "CPF": 27656326,
+            "Telefone": 4249305444,
+            "Endereco": {
+                "Rua": "Jairo Nunes",
+                "Bairro": "Metropol",
+                "Cidade": "Criciuma",
+                "CEP": "878001"
+            }
+        },
+        {
+            "Nome": "Rafaela Gomes",
+            "CPF": 11023040,
+            "Telefone": 4819323943,
+            "Endereco": {
+                "Rua": "Alvaro Catao",
+                "Bairro": "Minera",
+                "Cidade": "Criciuma",
+                "CEP": "878020"
+            }
+        },
+        {
+            "Nome": "Gerson Lopez",
+            "CPF": 25454325,
+            "Telefone": 4261898102,
+            "Endereco": {
+                "Rua": "Sebast\u00e3o Toledo",
+                "Bairro": "Operaria",
+                "Cidade": "Criciuma",
+                "CEP": "878110"
+            }
+        },
+        {
+            "Nome": "Joao Cancelo",
+            "CPF": 11235545,
+            "Telefone": 4856123647,
+            "Endereco": {
+                "Rua": "Oadi Matheus Silvano",
+                "Bairro": "Maria Ceu",
+                "Cidade": "Criciuma",
+                "CEP": "888101"
+            }
+        },
+        {
+            "Nome": "Lucas Paqueta",
+            "CPF": 16158963,
+            "Telefone": 4819323941,
+            "Endereco": {
+                "Rua": "Interlagos",
+                "Bairro": "Recanto Verde",
+                "Cidade": "Criciuma",
+                "CEP": "888150"
+            }
+        },
+        {
+            "Nome": "Memphis Depay",
+            "CPF": 78981236,
+            "Telefone": 4261898102,
+            "Endereco": {
+                "Rua": "Joao Milioli",
+                "Bairro": "Santa Barbara",
+                "Cidade": "Criciuma",
+                "CEP": "899910"
+            }
+        }
+    ],
+    "Num_Proximo": 6
+}
