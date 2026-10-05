@@ -155,7 +155,7 @@ class Banco:
             JOIN cliente 
                 ON contas_ativas.cliente_numero = cliente.numero
             GROUP BY cliente.numero, cliente.nome
-            ORDER BY TOTAL_SALDO_CONTA DESC
+            ORDER BY TOTAL_SALDO_CONTAS DESC
         """)
 
         
