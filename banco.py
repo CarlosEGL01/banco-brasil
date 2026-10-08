@@ -132,7 +132,9 @@ class Banco:
             "Movimentos": self.total_movimentos()
 
         }
-
+    def demonstrar_brench(self):
+        return "O brench está na rama desenvolvimento"
+    
     def relatorio_analitico(self):
 
         cursor.execute("""
