@@ -2,7 +2,7 @@ from conta import Conta, Fabrica_de_Contas
 from movimento import Movimento_Transferencia, Fabrica_de_Movimento
 from cliente import Cliente, Endereco
 from excecoes import BancoError, ClienteNaoEncontradoError, ContaNaoEncontradaError, ContaNaoEncerradaError, MesmaContaError, SaldoInsuficienteError
-#Atualizando a data
+
 data_atual = "13/10/2026"
 
 import json
