@@ -1,5 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI,HTTPException
 from pydantic import BaseModel, Field, field_validator
+from banco import Banco
+from cliente import Cliente, Endereco
+from excecoes import BancoError
 
 app = FastAPI(title="Banco Do Brasil API 0.2")
 
@@ -16,9 +19,18 @@ def verificar_status():
         "status": "operacional"
     }
 
+class EnderecoEntrada(BaseModel):
+    rua: str = Field(min_length=1, max_length=100)
+    bairro: str = Field(min_length=1, max_length=100)
+    cidade: str = Field(min_length=1, max_length=100)
+    cep: str = Field(min_length=8, max_length=9)
+
+
 class ClienteEntrada(BaseModel):
     nome: str = Field(min_length=2, max_length=100)
-    cpf: str
+    cpf: str = Field(min_length=11, max_length=14)
+    phone: str = Field(min_length=8, max_length=20)
+    endereco: EnderecoEntrada
 
     @field_validator("nome")
     @classmethod
@@ -30,11 +42,29 @@ class ClienteEntrada(BaseModel):
 
         return valor
 
+banco = Banco("Banco Brasil")
+@app.post("/clientes", status_code=201)
+def cadastrar_cliente(dados: ClienteEntrada):
+    endereco = Endereco(
+        dados.endereco.rua,
+        dados.endereco.bairro,
+        dados.endereco.cidade,
+        dados.endereco.cep
+    )
 
-@app.post("/clientes")
-def cadastrar_cliente(cliente: ClienteEntrada):
+    cliente = Cliente(
+        dados.nome,
+        dados.cpf,
+        dados.phone,
+        endereco
+    )
+
+    try:
+        cliente_cadastrado = banco.cadastrar_cliente(cliente)
+    except BancoError as erro:
+        raise HTTPException(status_code=409, detail=str(erro))
+
     return {
-        "mensagem": "Dados recebidos com sucesso",
-        "cliente": cliente.model_dump()
+        "mensagem": "Cliente cadastrado com sucesso",
+        "cliente": cliente_cadastrado.para_dict()
     }
-

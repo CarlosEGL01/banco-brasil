@@ -7,7 +7,7 @@ data_atual = "13/10/2026"
 
 import json
 import sqlite3
-conexao = sqlite3.connect("banco.db")
+conexao = sqlite3.connect("banco.db", check_same_thread=False) #Se agregou check_same_thread = false para que podermos fazer consultas no API.
 conexao.execute("PRAGMA foreign_keys = ON")
 cursor = conexao.cursor()
 
