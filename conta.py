@@ -347,6 +347,18 @@ class Fabrica_de_Contas():
 
           return classe_conta
 
+     @classmethod
+     def fabricar_conta_completa(cls, conta, cliente):
+
+          classe_conta = cls.fabricar_conta(conta[2])
+
+          conta_final = classe_conta(cliente, conta[0])
+
+          conta_final.saldo = conta[3]
+          conta_final.estado = conta[4]
+     
+          return conta_final
+
           
 
 
