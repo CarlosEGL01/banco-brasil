@@ -223,3 +223,24 @@ JOIN cliente
 GROUP BY cliente.numero, cliente.nome
 
 
+CREATE TABLE IF NOT EXISTS historico_transferencia (
+        numero INTEGER PRIMARY KEY AUTOINCREMENT,
+        numero_conta INTEGER NOT NULL,
+        operacao TEXT NOT NULL,
+        status TEXT NOT NULL,
+        data TEXT NOT NULL, 
+        numero_conta_conexao INTEGER NOT NULL,
+        valor REAL ,
+        FOREIGN KEY (numero_conta) REFERENCES conta(numero)
+);
+
+
+DROP TABLE IF EXISTS historico_transferencia
+
+DELETE FROM historico  
+
+DELETE FROM sqlite_sequence WHERE name = 'historico'
+
+
+UPDATE conta SET saldo = 0
+        

@@ -1,4 +1,8 @@
 import locale
+import sqlite3
+conexao = sqlite3.connect("banco.db", check_same_thread=False)
+conexao.execute("PRAGMA foreign_key = ON")
+cursor = conexao.cursor()
 
 # Define a configuração para o padrão do Brasil
 locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
@@ -100,7 +104,49 @@ class Fabrica_de_Movimento():
 
           return movimento_novo
 
+     def criar_movimento(operacao):
+          if operacao == "Transferencia Enviada" or operacao == "Transferencia Recebida":
+               operacao = "Transferencia"
+          
+          fabrica = {
+              "Deposito": Movimento_Deposito,
+              "Transferencia": Movimento_Transferencia,
+              "Saque": Movimento_Saque
+          }
+          class_movimento = fabrica.get(operacao, Movimento)
+
+          return class_movimento
      
+     def restaurar_historico(numero_conta):
+          from banco import Banco
+          #CONSULTANDO HISTORICO
+          cursor.execute("SELECT * FROM historico WHERE numero_conta = ?" , (numero_conta,))
+          lista_movimentos = cursor.fetchall()
+          lista_movimentos_objetos = []
+          for movimento in lista_movimentos:
+               classe = Fabrica_de_Movimento.criar_movimento(movimento[2])
+               movimento_n = classe(movimento[2],movimento[3],movimento[4], movimento[5])
+               lista_movimentos_objetos.append(movimento_n)
+          #CONSULTANDO HISTORICO TRANSFERENCIA
+          cursor.execute("SELECT * FROM historico_transferencia WHERE numero_conta = ?" , (numero_conta,))
+          lista_movimentos = cursor.fetchall()
+
+          for movimento in lista_movimentos:
+               classe = Fabrica_de_Movimento.criar_movimento(movimento[2])
+               banco = Banco("Banco Do Brasil")
+               conta_origem = banco.buscar_conta(movimento[1])
+               conta_destino = banco.buscar_conta(movimento[5])
+               movimento_n = classe(movimento[2], movimento[3], movimento[4], conta_origem, conta_destino,movimento[6])
+               lista_movimentos_objetos.append(movimento_n)
+
+          return lista_movimentos_objetos
+
+
 
           
+          
 
+if __name__ == "__main__":
+    list = Fabrica_de_Movimento.restaurar_historico(1)
+
+   

@@ -262,7 +262,13 @@ class Banco:
 
     def buscar_contas_cpf(self, cpf):
         cursor.execute("SELECT * FROM conta WHERE cliente_numero IN (SELECT NUMERO FROM cliente WHERE cpf = ?) ",(cpf,))
-        return cursor.fetchall()
+        contas = cursor.fetchall()
+        lista = []
+        cliente  = self.buscar_cliente(cpf)
+        for conta in contas:
+            conta = Fabrica_de_Contas.fabricar_conta_completa(conta, cliente)
+            lista.append(conta)
+        return lista
 
 
 
@@ -425,30 +431,19 @@ class Banco:
 
                 #HISTORICO
                 cursor.execute("""
-                    INSERT INTO historicO(numero_conta,operacao,status,data,valor)
-                    VALUES(?,"Transferencia Enviada","Sucesso",?,?)
-                    """, (conta_origem.numero, data_atual,-valor))
+                    INSERT INTO historico_transferencia(numero_conta,operacao,status,data,numero_conta_conexao,valor)
+                    VALUES(?,"Transferencia Enviada","Sucesso",?,?,?)
+                    """, (conta_origem.numero, data_atual,conta_destino.numero,-valor))
                 cursor.execute("""
-                    INSERT INTO historico(numero_conta,operacao,status,data,valor)
-                    VALUES(?,"Transferencia Recebida","Sucesso",?,?)
-                    """, (conta_destino.numero, data_atual,valor))
+                    INSERT INTO historico_transferencia(numero_conta,operacao,status,data,numero_conta_conexao,valor)
+                    VALUES(?,"Transferencia Recebida","Sucesso",?,?,?)
+                    """, (conta_destino.numero, data_atual,conta_origem.numero,valor))
                 conexao.commit()
             except sqlite3.Error:
                 conexao.rollback()
                 raise
 
-            evento_novo = Movimento_Transferencia("Transferencia","Sucesso",data_atual,conta_origem, conta_destino,valor)
-            conta_origem.registrar_movimento(evento_novo)
-            conta_destino.registrar_movimento(evento_novo)
             return True
         else:
             raise SaldoInsuficienteError("Conta origem tem saldo insuficiente ")
-
-        
-    
-
-
-
-
-
 

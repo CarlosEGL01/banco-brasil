@@ -68,3 +68,38 @@ def cadastrar_cliente(dados: ClienteEntrada):
         "mensagem": "Cliente cadastrado com sucesso",
         "cliente": cliente_cadastrado.para_dict()
     }
+
+@app.get("/clientes/{cpf}")
+def consultar_cliente(cpf: str):
+    cliente = banco.buscar_cliente(cpf)
+
+    if cliente is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Cliente não encontrado."
+        )
+
+    return cliente.para_dict()
+
+
+
+@app.get("/clientes/{cpf}/contas")
+def consultar_contas_cliente(cpf: str):
+    cliente = banco.buscar_cliente(cpf)
+
+    if cliente is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Cliente não encontrado."
+        )
+
+    contas = banco.buscar_contas_cpf(cpf)
+
+    return {
+        "cliente": cliente.nome,
+        "total_contas": len(contas),
+        "contas": [
+            conta.para_dict()
+            for conta in contas
+        ]
+    }

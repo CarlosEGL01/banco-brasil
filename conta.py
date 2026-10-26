@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
-from movimento import Movimento, Movimento_Deposito, Movimento_Saque, Movimento_Transferencia
+from movimento import Movimento, Movimento_Deposito, Movimento_Saque, Movimento_Transferencia, Fabrica_de_Movimento
 from excecoes import SaldoInsuficienteError, ContaEncerradaError, BancoError, CreditoInsuficienteError, ContaNaoEncerradaError 
 import locale
 
 # Define a configuração para o padrão do Brasil
 locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
 import sqlite3
-conexao = sqlite3.connect("banco.db")
+conexao = sqlite3.connect("banco.db", check_same_thread=False)
 conexao.execute("PRAGMA foreign_key = ON")
 cursor = conexao.cursor()
 
@@ -56,6 +56,9 @@ class Conta(ABC):
           if self.estado != "Ativa":
                return None
           return self.__historico.copy()
+     @historico.setter
+     def historico(self, valor):
+          self.__historico = valor
      
      def depositar(self,valor):
           if self.estado != "Ativa":
@@ -353,9 +356,13 @@ class Fabrica_de_Contas():
           classe_conta = cls.fabricar_conta(conta[2])
 
           conta_final = classe_conta(cliente, conta[0])
-
-          conta_final.saldo = conta[3]
+          #Restaurando os estados da conta:
+          conta_final.saldo = conta[3] 
           conta_final.estado = conta[4]
+
+          historico = Fabrica_de_Movimento.restaurar_historico(conta[0])
+
+          conta_final.historico = historico
      
           return conta_final
 
