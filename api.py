@@ -2,7 +2,7 @@ from fastapi import FastAPI,HTTPException
 from pydantic import BaseModel, Field, field_validator
 from banco import Banco
 from cliente import Cliente, Endereco
-from excecoes import BancoError
+from excecoes import BancoError, ClienteNaoEncontradoError, MesmaContaError, ContaNaoEncontradaError
 
 app = FastAPI(title="Banco Do Brasil API 0.2")
 
@@ -102,4 +102,40 @@ def consultar_contas_cliente(cpf: str):
             conta.para_dict()
             for conta in contas
         ]
+    }
+
+
+
+
+@app.post("/clientes/{cpf}/cadastrar-conta",status_code=201)
+def cadastrar_conta(cpf: str, tipo: str):
+    try:
+        cliente = banco.buscar_cliente(cpf)
+        conta = banco.abrir_conta(cliente, tipo)
+    except ClienteNaoEncontradoError as erro:
+        raise HTTPException(status_code=404, detail=str(erro))
+    except MesmaContaError as erro:
+        raise HTTPException(status_code=409, detail=str(erro))
+    except BancoError as erro:
+        raise HTTPException(status_code=400, detail=str(erro))
+    return {
+        "mensagem": "Conta criada com sucesso",
+        "cliente": conta.para_dict()
+    }
+
+    
+
+@app.get("/conta/{numero}")
+def consultar_conta(numero: int):
+    try:
+        conta = banco.buscar_conta(numero)
+
+    except ContaNaoEncontradaError as e:
+        raise HTTPException(status_code= 404, detail=str(e))
+    except BancoError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    return {
+        "mensagem": f"Bem-vindo a conta {numero}",
+        "conta": conta.para_dict()
     }

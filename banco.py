@@ -284,7 +284,7 @@ class Banco:
         resultado_cliente = cursor.fetchone()
 
         if resultado_cliente is None:
-            return None
+            raise ClienteNaoEncontradoError("Esse cliente não está na base de dados!")
         
         cursor.execute("""
         SELECT * from endereco
