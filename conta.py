@@ -87,7 +87,7 @@ class Conta(ABC):
                     VALUES(?,"Deposito", "Sucesso", ?, ?)
                """, (self.numero,data_atual,valor,))
                conexao.commit()
-               return True
+               return self
           
 
      def sacar(self,valor): #APLICAR O TRATAMENTO DE ERRO

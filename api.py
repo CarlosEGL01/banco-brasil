@@ -2,7 +2,7 @@ from fastapi import FastAPI,HTTPException
 from pydantic import BaseModel, Field, field_validator
 from banco import Banco
 from cliente import Cliente, Endereco
-from excecoes import BancoError, ClienteNaoEncontradoError, MesmaContaError, ContaNaoEncontradaError
+from excecoes import BancoError, ClienteNaoEncontradoError, MesmaContaError, ContaNaoEncontradaError, ContaNaoEncerradaError
 
 app = FastAPI(title="Banco Do Brasil API 0.2")
 
@@ -133,7 +133,7 @@ def consultar_conta(numero: int):
     except ContaNaoEncontradaError as e:
         raise HTTPException(status_code= 404, detail=str(e))
     except BancoError as e:
-            raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e))
 
     return {
         "mensagem": f"Bem-vindo a conta {numero}",

@@ -249,12 +249,12 @@ class Banco:
         conta_class = Fabrica_de_Contas.fabricar_conta(resultado_conta[2])
         if conta_class is None:
             return None
-       
+        historico = Fabrica_de_Movimento.restaurar_historico_transferencia(num)
+        
         conta = conta_class(resultado_cliente,num)
-
         conta.estado = resultado_conta[4]
         conta.saldo = resultado_conta[3]
-        
+        conta.historico = historico
         return conta
 
 

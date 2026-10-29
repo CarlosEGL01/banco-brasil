@@ -244,3 +244,7 @@ DELETE FROM sqlite_sequence WHERE name = 'historico'
 
 UPDATE conta SET saldo = 0
         
+
+SELECT *
+FROM HISTORICO
+WHERE numero_conta =  1
