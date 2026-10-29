@@ -249,7 +249,7 @@ class Banco:
         conta_class = Fabrica_de_Contas.fabricar_conta(resultado_conta[2])
         if conta_class is None:
             return None
-        historico = Fabrica_de_Movimento.restaurar_historico_transferencia(num)
+        historico = Fabrica_de_Movimento.restaurar_historico(num)
         
         conta = conta_class(resultado_cliente,num)
         conta.estado = resultado_conta[4]
@@ -446,4 +446,8 @@ class Banco:
             return True
         else:
             raise SaldoInsuficienteError("Conta origem tem saldo insuficiente ")
+banco = Banco("Nunbak")
+historico = banco.buscar_conta(1).historico
 
+for movimento in historico:
+    print(movimento.para_dict())
