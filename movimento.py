@@ -116,67 +116,56 @@ class Fabrica_de_Movimento():
           class_movimento = fabrica.get(operacao, Movimento)
 
           return class_movimento
-
-
-     def restaurar_historico_transferencia(numero_conta):
-          from banco import Banco
-          
-          #CONSULTANDO HISTORICO TRANSFERENCIA
+     
+     def restaurar_historico(numero_conta):
+          #CONSULTANDO HISTORICO: DEPOSITO / SAQUE / GERAL.
           try:
-               cursor.execute("SELECT * FROM historico_transferencia WHERE numero_conta = ?" , (numero_conta,))
-               lista_movimentos_historico = cursor.fetchall()
-               banco = Banco("Banco Do Brasil")          
-               lista_movimentos_objetos = []
-          except sqlite3.Error as e:
-               print("Error")
-               print(e)
-          else:
-               print("Sucesso")
-          finally:
-               
-               print("Finalizado")
+               #CONSULTANDO HISTORICO: DEPOSITO / SAQUE / GERAL.
+               cursor.execute("SELECT * FROM historico WHERE numero_conta = ?" , (numero_conta,))
+               movimentos = cursor.fetchall()
+               movimentos_objetos = []
 
-          for movimento in lista_movimentos_historico:
+               #CONSULTANDO HISTORICO TRANSFERENCIA 
+               cursor.execute("SELECT * FROM historico_transferencia WHERE numero_conta = ?" , (numero_conta,))
+               movimento_trans = cursor.fetchall()          
+          except sqlite3.Error as e:
+               print(e)
+          
+
+          for movimento in movimentos:
                tipo = movimento[2]
+               status = movimento[3]
+               data = movimento[4]
+               valor = movimento [5]
+               classe = Fabrica_de_Movimento.criar_movimento(tipo)
+          
+               movimento_n = classe(tipo,status,data, valor)
+               movimentos_objetos.append(movimento_n)
+
+          for movimento in movimento_trans:
+               tipo = movimento[2]
+               status = movimento[3]
+               data = movimento[4]
+               valor = movimento [6]
+               
                if tipo == "Transferencia Enviada":
-                    classe = Fabrica_de_Movimento.criar_movimento(tipo)
                     origem = movimento[1]
                     destino = movimento[5]
-                    movimento_n = classe(tipo, movimento[3], movimento[4], origem, destino,movimento[6])
-                    lista_movimentos_objetos.append(movimento_n)
+                    classe = Fabrica_de_Movimento.criar_movimento(tipo)
+                    movimento_n = classe(tipo, status, data, origem, destino,valor)
+                    movimentos_objetos.append(movimento_n)
                elif tipo == "Transferencia Recebida":
                     classe = Fabrica_de_Movimento.criar_movimento(tipo)
                     origem = movimento[5]
                     destino = movimento[1]
-                    movimento_n = classe(tipo, movimento[3], movimento[4], origem, destino,movimento[6])
-                    lista_movimentos_objetos.append(movimento_n)
-
-          return lista_movimentos_objetos
-     
-     def restaurar_historico(numero_conta):
-          conexao = sqlite3.connect("banco.db", check_same_thread=False)
-          conexao.execute("PRAGMA foreign_key = ON")
-          cursor = conexao.cursor()
-          #CONSULTANDO HISTORICO
-          cursor.execute("SELECT * FROM historico WHERE numero_conta = ?" , (numero_conta,))
-          lista_movimentos = cursor.fetchall()
-          lista_movimentos_objetos = []
-          
-          for movimento in lista_movimentos:
-               
-               classe = Fabrica_de_Movimento.criar_movimento(movimento[2])
-          
-               movimento_n = classe(movimento[2],movimento[3],movimento[4], movimento[5])
-               lista_movimentos_objetos.append(movimento_n)
-
-          lista_movimentos_objetos_trans = Fabrica_de_Movimento.restaurar_historico_transferencia(numero_conta)
-
-          return lista_movimentos_objetos + lista_movimentos_objetos_trans
+                    movimento_n = classe(tipo, status, data, origem, destino,valor)
+                    movimentos_objetos.append(movimento_n)
 
 
 
-          
-          
+
+
+          return movimentos_objetos
 
 if __name__ == "__main__":
     lista = Fabrica_de_Movimento.restaurar_historico(2)
