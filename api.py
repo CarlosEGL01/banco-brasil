@@ -139,3 +139,23 @@ def consultar_conta(numero: int):
         "mensagem": f"Bem-vindo a conta {numero}",
         "conta": conta.para_dict()
     }
+
+
+@app.post("/conta/depositar", status_code=201)
+def depositar_conta(conta: int, dinheiro: float):
+    try:
+        conta = banco.buscar_conta(conta)
+        saldo_anterior = conta.saldo
+        conta_atual = conta.depositar(dinheiro)
+    except ContaNaoEncerradaError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    except BancoError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return {
+        "mensagem: ": " Deposito com sucesso.",
+        "saldo anterior": saldo_anterior,
+        "saldo atual: ": conta_atual.saldo,
+        "conta": conta_atual.para_dict()
+    }

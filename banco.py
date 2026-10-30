@@ -446,8 +446,3 @@ class Banco:
             return True
         else:
             raise SaldoInsuficienteError("Conta origem tem saldo insuficiente ")
-banco = Banco("Nunbak")
-historico = banco.buscar_conta(1).historico
-
-for movimento in historico:
-    print(movimento.para_dict())
