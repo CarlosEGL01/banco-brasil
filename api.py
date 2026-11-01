@@ -2,7 +2,7 @@ from fastapi import FastAPI,HTTPException
 from pydantic import BaseModel, Field, field_validator
 from banco import Banco
 from cliente import Cliente, Endereco
-from excecoes import BancoError, ClienteNaoEncontradoError, MesmaContaError, ContaNaoEncontradaError, ContaNaoEncerradaError
+from excecoes import BancoError, ClienteNaoEncontradoError, MesmaContaError, ContaNaoEncontradaError, ContaNaoEncerradaError, SaldoInsuficienteError 
 
 app = FastAPI(title="Banco Do Brasil API 0.2")
 
@@ -150,11 +150,31 @@ def depositar_conta(conta: int, dinheiro: float):
     except ContaNaoEncerradaError as e:
         raise HTTPException(status_code=409, detail=str(e))
     except ValueError as e:
-        raise HTTPException(status_code=409, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e))
     except BancoError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return {
         "mensagem: ": " Deposito com sucesso.",
+        "saldo anterior": saldo_anterior,
+        "saldo atual: ": conta_atual.saldo,
+        "conta": conta_atual.para_dict()
+    }
+@app.post("/conta/sacar", status_code=201)
+def sacar_conta(conta: int, dinheiro: float):
+    try:
+        conta = banco.buscar_conta(conta)
+        saldo_anterior = conta.saldo
+        conta_atual = conta.sacar(dinheiro)
+    except ContaNaoEncerradaError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except SaldoInsuficienteError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    except BancoError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return {
+        "mensagem: ": " Saque com sucesso.",
         "saldo anterior": saldo_anterior,
         "saldo atual: ": conta_atual.saldo,
         "conta": conta_atual.para_dict()
