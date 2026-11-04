@@ -1,35 +1,3 @@
-
-import sqlite3
-conexao = sqlite3.connect("banco.db")
-conexao.execute("PRAGMA foreign_key = ON")
-cursor = conexao.cursor()
-
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS cliente (
-    numero INTEGER PRIMARY KEY AUTOINCREMENT,
-    nome TEXT NOT NULL,
-    cpf INTEGER UNIQUE NOT NULL,
-    phone INTEGER NOT NULL
-)
-""")
-conexao.commit()
-
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS endereco (
-    numero INTEGER PRIMARY KEY AUTOINCREMENT,
-    cliente_numero INTEGER UNIQUE NOT NULL,
-    rua TEXT NOT NULL,
-    bairro TEXT NOT NULL,
-    cidade TEXT NOT NULL,
-    cep TEXT NOT NULL,
-
-    FOREIGN KEY (cliente_numero) REFERENCES cliente(numero)
-)
-""")
-conexao.commit()
-
-
-
 class Endereco:
     def __init__(self, rua, bairro, cidade, cep):
         self.rua = rua
@@ -84,3 +52,8 @@ class Cliente:
             endereco
         )
 
+
+
+list = []
+
+print(len(list))

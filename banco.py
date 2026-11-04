@@ -1,7 +1,7 @@
-from conta import Conta, Fabrica_de_Contas
-from movimento import Movimento_Transferencia, Fabrica_de_Movimento
+from conta import Fabrica_de_Contas
+from movimento import Fabrica_de_Movimento
 from cliente import Cliente, Endereco
-from excecoes import BancoError, ClienteNaoEncontradoError, ContaNaoEncontradaError, ContaNaoEncerradaError, MesmaContaError, SaldoInsuficienteError
+from excecoes import BancoError, ClienteNaoEncontradoError, ContaNaoEncontradaError, MesmaContaError, SaldoInsuficienteError,  ContaEncerradaError
 
 data_atual = "13/10/2026"
 
@@ -18,7 +18,7 @@ class Banco:
         self.nome = nome
         self.contas = []
         self.clientes = []
-        self.proximo = 0
+        self.proximo = 0 #Contagem dos numeros de conta.
 
     def __str__(self):
         return f"Banco: {self.nome}" 
@@ -30,7 +30,7 @@ class Banco:
     def __len__(self):
         return len(self.contas)
     
-    
+    #JSON: SERIALIZAÇÃO / DESERIALIZAÇÃO 
     def para_dict(self):
         return{
             "Nome": self.nome,
@@ -38,6 +38,7 @@ class Banco:
             "Clientes": [cliente.para_dict() for cliente in self.clientes],
             "Num_Proximo": self.proximo
         }
+
     @classmethod
     def de_dict(cls,dados):
         return cls(dados["Nome"])
@@ -69,7 +70,7 @@ class Banco:
             banco.contas.append(conta_nova)
         
         return banco
-                
+#---------------------------------------------------------------------------
     """  
     def relatorio(self):
         return {
@@ -120,7 +121,7 @@ class Banco:
         cursor.execute("SELECT COUNT(*) FROM historico")
 
         return cursor.fetchone()[0]  
-    
+    #--------------------------------------------------------------------
     ##RELATORIOS APLICANDO CONSULTAS SQLITE
     def relatorio(self):
         return {
@@ -132,8 +133,6 @@ class Banco:
             "Movimentos": self.total_movimentos()
 
         }
-    def demonstrar_brench(self):
-        return "O brench está na rama desenvolvimento"
     
     def relatorio_analitico(self):
 
@@ -185,9 +184,6 @@ class Banco:
         cursor.execute("SELECT AVG(saldo) FROM conta")
         return cursor.fetchone()[0]
 
-
-
-
     def contas_categoria_salarios(self,categoria):
         cursor.execute("""WITH conta_saldo_maior AS (
             SELECT *,
@@ -217,7 +213,8 @@ class Banco:
         
 
         return cursor.fetchall()
-    
+
+#---------------------------------------------------------------------------------------------------
     def encerrar_conta(self,num_conta):
         conta = self.buscar_conta(num_conta)
 
@@ -227,6 +224,7 @@ class Banco:
         conta.encerrar()
         return True
     
+    """    
     def movimentos_das_contas(self):
         total_movimentos = 0
 
@@ -235,6 +233,7 @@ class Banco:
                 total_movimentos += len(conta.historico)
         
         return total_movimentos
+    """
    
     def buscar_conta(self,num):
         cursor.execute("SELECT * FROM conta WHERE numero = ?", (num,))
@@ -271,10 +270,6 @@ class Banco:
         return lista
 
 
-
-
-    
-    
     def buscar_cliente(self,cpf_num): #--> MÉTODO NOVO
         cursor.execute("""
         SELECT * from cliente
@@ -327,9 +322,6 @@ class Banco:
             raise BancoError("Cliente já cadastrado!")
 
             
-
-            
-
     def gerar_numero(self):
        
        cursor.execute("""
@@ -402,32 +394,34 @@ class Banco:
             raise ContaNaoEncontradaError("Conta Origem não encontrada")
         elif conta_destino is None:
             raise ContaNaoEncontradaError("Conta Destino não encontrada") 
+
+        if conta_origem.estado != "Ativa" or conta_destino.estado != "Ativa":
+            raise ContaEncerradaError("Uma das contas não esta ativa!")
                                                                     
-    
         if conta_origem.numero == conta_destino.numero:
-            raise BancoError("Não pode transferir no mesmo tipo de conta")
-        if valor <= conta_origem.saldo: # 200 < 100
+            raise MesmaContaError("Não pode transferir no mesmo numero de conta")
+        
+        if valor <= conta_origem.saldo: 
             total_saldo_origem = conta_origem.saldo - valor
             total_saldo_destino = conta_destino.saldo + valor
-
-            conta_origem.saldo = total_saldo_origem
-     #       print(conta_origem.saldo)
-            conta_destino.saldo = total_saldo_destino
-     #       print(conta_destino.saldo)
-            
+      
             #MODIFICAR ESTADO DO SQL
             try:
-
                 cursor.execute("""
                     UPDATE conta
                     SET saldo = ?
                     WHERE numero = ?
                 """, (total_saldo_origem, conta_origem.numero))
+                if cursor.rowcount != 1:
+                    raise ContaNaoEncontradaError("Não foi possivel atualizar o estatus /Conta não encontrada")
+                
                 cursor.execute("""
                     UPDATE conta
                     SET saldo = ?
                     WHERE numero = ?
                 """, (total_saldo_destino, conta_destino.numero))
+                if cursor.rowcount != 1:
+                    raise ContaNaoEncontradaError("Não foi possivel atualizar o estatus/Conta não encontrada")
 
                 #HISTORICO
                 cursor.execute("""
@@ -439,10 +433,14 @@ class Banco:
                     VALUES(?,"Transferencia Recebida","Sucesso",?,?,?)
                     """, (conta_destino.numero, data_atual,conta_origem.numero,valor))
                 conexao.commit()
-            except sqlite3.Error:
+
+            except Exception:
                 conexao.rollback()
                 raise
-
-            return True
+            #Não teve excaçao tudo certo!
+            conta_origem.saldo = total_saldo_origem
+            conta_destino.saldo = total_saldo_destino 
         else:
             raise SaldoInsuficienteError("Conta origem tem saldo insuficiente ")
+
+

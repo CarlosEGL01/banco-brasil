@@ -130,40 +130,40 @@ class Fabrica_de_Movimento():
                movimento_trans = cursor.fetchall()          
           except sqlite3.Error as e:
                print(e)
-          
-
-          for movimento in movimentos:
-               tipo = movimento[2]
-               status = movimento[3]
-               data = movimento[4]
-               valor = movimento [5]
-               classe = Fabrica_de_Movimento.criar_movimento(tipo)
-          
-               movimento_n = classe(tipo,status,data, valor)
-               movimentos_objetos.append(movimento_n)
-
-          for movimento in movimento_trans:
-               tipo = movimento[2]
-               status = movimento[3]
-               data = movimento[4]
-               valor = movimento [6]
+          if len(movimentos) != 0:
+               for movimento in movimentos:
+                    tipo = movimento[2]
+                    status = movimento[3]
+                    data = movimento[4]
+                    valor = movimento [5]
+                    classe = Fabrica_de_Movimento.criar_movimento(tipo)
                
-               if tipo == "Transferencia Enviada":
-                    origem = movimento[1]
-                    destino = movimento[5]
-                    classe = Fabrica_de_Movimento.criar_movimento(tipo)
-                    movimento_n = classe(tipo, status, data, origem, destino,valor)
+                    movimento_n = classe(tipo,status,data, valor)
                     movimentos_objetos.append(movimento_n)
-               elif tipo == "Transferencia Recebida":
-                    classe = Fabrica_de_Movimento.criar_movimento(tipo)
-                    origem = movimento[5]
-                    destino = movimento[1]
-                    movimento_n = classe(tipo, status, data, origem, destino,valor)
-                    movimentos_objetos.append(movimento_n)
+          else:
+               return movimentos_objetos
+          if len(movimento_trans) != 0:
+               for movimento in movimento_trans:
+                    tipo = movimento[2]
+                    status = movimento[3]
+                    data = movimento[4]
+                    valor = movimento [6]
+                    
+                    if tipo == "Transferencia Enviada":
+                         origem = movimento[1]
+                         destino = movimento[5]
+                         classe = Fabrica_de_Movimento.criar_movimento(tipo)
+                         movimento_n = classe(tipo, status, data, origem, destino,valor)
+                         movimentos_objetos.append(movimento_n)
+                    elif tipo == "Transferencia Recebida":
+                         classe = Fabrica_de_Movimento.criar_movimento(tipo)
+                         origem = movimento[5]
+                         destino = movimento[1]
+                         movimento_n = classe(tipo, status, data, origem, destino,valor)
+                         movimentos_objetos.append(movimento_n)
 
-
-
-
+          else:
+               return movimentos_objetos
 
           return movimentos_objetos
 

@@ -2,7 +2,7 @@ from fastapi import FastAPI,HTTPException
 from pydantic import BaseModel, Field, field_validator
 from banco import Banco
 from cliente import Cliente, Endereco
-from excecoes import BancoError, ClienteNaoEncontradoError, MesmaContaError, ContaNaoEncontradaError, ContaNaoEncerradaError, SaldoInsuficienteError 
+from excecoes import BancoError, ClienteNaoEncontradoError, MesmaContaError, ContaEncerradaError,ContaNaoEncontradaError, ContaNaoEncerradaError, SaldoInsuficienteError 
 
 app = FastAPI(title="Banco Do Brasil API 0.2")
 
@@ -141,13 +141,17 @@ def consultar_conta(numero: int):
     }
 
 
+
 @app.post("/conta/depositar", status_code=201)
 def depositar_conta(conta: int, dinheiro: float):
     try:
         conta = banco.buscar_conta(conta)
         saldo_anterior = conta.saldo
         conta_atual = conta.depositar(dinheiro)
-    except ContaNaoEncerradaError as e:
+
+    except ContaNaoEncontradaError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ContaEncerradaError as e:
         raise HTTPException(status_code=409, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -165,7 +169,9 @@ def sacar_conta(conta: int, dinheiro: float):
         conta = banco.buscar_conta(conta)
         saldo_anterior = conta.saldo
         conta_atual = conta.sacar(dinheiro)
-    except ContaNaoEncerradaError as e:
+    except ContaNaoEncontradaError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ContaEncerradaError as e:
         raise HTTPException(status_code=409, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -178,4 +184,34 @@ def sacar_conta(conta: int, dinheiro: float):
         "saldo anterior": saldo_anterior,
         "saldo atual: ": conta_atual.saldo,
         "conta": conta_atual.para_dict()
+    }
+
+
+@app.post("/banco/transferencia", status_code=201)
+def transferencia(num_origem: int, num_destino: int, valor: float):
+    try:
+        banco = Banco("Banco Do Brasil")
+        banco.transferencia(num_origem, num_destino, valor)
+
+        conta_origem = banco.buscar_conta(num_origem)
+        conta_destino = banco.buscar_conta(num_destino)
+        
+
+    except ContaNaoEncontradaError as e:
+       raise HTTPException(status_code=404, detail=str(e))
+    except ContaEncerradaError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except MesmaContaError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    except SaldoInsuficienteError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    except BancoError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return {
+        "mensagem: ": " Transferencia com sucesso.",
+        "valor da transacao: ": valor,
+        "Historico Origem": conta_origem.historico[-1],
+        "Historico Destino: ": conta_destino.historico[-1]
     }
