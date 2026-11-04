@@ -452,13 +452,3 @@ class Banco:
         else:
             raise SaldoInsuficienteError("Conta origem tem saldo insuficiente ")
 
-
-
-banco = Banco("Bradesco")
-
-conta = banco.buscar_conta(12)
-print(conta.estado)
-
-banco.reabertura_conta(12)
-
-print(conta.estado)

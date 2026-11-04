@@ -251,3 +251,19 @@ def encerrar_conta(num: int):
         "conta": conta.para_dict()
     }
 
+@app.patch("/banco/reabertura-conta/{num}")
+def encerrar_conta(num: int):
+    try:
+        conta = banco.reabertura_conta(num)
+    
+    except ContaNaoEncontradaError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ContaNaoEncerradaError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    except BancoError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+    return {
+        "mensagem": "Re-abertura de conta com sucesso",
+        "conta": conta.para_dict()
+    }
+
