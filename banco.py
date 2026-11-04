@@ -1,7 +1,7 @@
 from conta import Fabrica_de_Contas
 from movimento import Fabrica_de_Movimento
 from cliente import Cliente, Endereco
-from excecoes import BancoError, ClienteNaoEncontradoError, ContaNaoEncontradaError, MesmaContaError, SaldoInsuficienteError,  ContaEncerradaError
+from excecoes import BancoError, ClienteNaoEncontradoError, ContaNaoEncontradaError, MesmaContaError, SaldoInsuficienteError,  ContaEncerradaError, ContaNaoEncerradaError
 
 data_atual = "13/10/2026"
 
@@ -222,6 +222,15 @@ class Banco:
             raise ContaNaoEncontradaError("Não encontramos a conta no sistema.")
         
         conta.encerrar()
+        return conta
+
+    def reabertura_conta(self, num_conta):
+        conta = self.buscar_conta(num_conta)
+
+        if conta is None:
+            raise ContaNaoEncontradaError("Não encontramos a conta no sistema.")
+
+        conta.re_abertura()
         return conta
     
     """    
@@ -444,3 +453,12 @@ class Banco:
             raise SaldoInsuficienteError("Conta origem tem saldo insuficiente ")
 
 
+
+banco = Banco("Bradesco")
+
+conta = banco.buscar_conta(12)
+print(conta.estado)
+
+banco.reabertura_conta(12)
+
+print(conta.estado)

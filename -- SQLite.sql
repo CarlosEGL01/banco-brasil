@@ -47,6 +47,10 @@ WHERE cliente_numero = (
         WHERE cpf = 11407147242
 );
 
+
+
+
+
 --ANTES DE IN
 
 SELECT * 

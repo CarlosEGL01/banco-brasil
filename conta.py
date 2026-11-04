@@ -212,21 +212,30 @@ class Conta(ABC):
           return self
               
      def re_abertura(self):
-          if self.estado != "Ativa":
-               self.estado = "Ativa"
-               cursor.execute("""
-                    INSERT INTO historico(numero_conta,operacao,status,data,valor)
-                    VALUES(?,"Re-Abertura","Sucesso",?,0)
-                    """, (self.numero, data_atual,))
-               
+          if self.estado == "Ativa":
+               raise ContaNaoEncerradaError("Essa conta já esta ativa!")
+          try:
                cursor.execute("""
                          UPDATE conta SET estado = "Ativa"
                          WHERE numero = ?
                          """, (self.numero,))
-               conexao.commit() 
-               return True
-          else:
-               return None
+               if cursor.rowcount != 1:
+                    raise ContaNaoEncontradaError("Não conseguimos localizar a conta e atualizar o estatus")
+                    
+               cursor.execute("""
+                         INSERT INTO historico(numero_conta,operacao,status,data,valor)
+                         VALUES(?,"Re-Abertura","Sucesso",?,0)
+                         """, (self.numero, data_atual,))
+               conexao.commit()
+          except Exception:
+               conexao.rollback()
+               raise 
+               
+
+          self.estado = "Ativa"
+          movimento = Movimento("Re-abertura", "Sucesso", data_atual)
+          self.registrar_movimento(movimento)
+          return self
           
      def extrato(self):
           saldo_formatado = locale.format_string("%.2f", self.saldo, grouping=True)

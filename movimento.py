@@ -136,12 +136,17 @@ class Fabrica_de_Movimento():
                     status = movimento[3]
                     data = movimento[4]
                     valor = movimento [5]
-                    classe = Fabrica_de_Movimento.criar_movimento(tipo)
-               
-                    movimento_n = classe(tipo,status,data, valor)
-                    movimentos_objetos.append(movimento_n)
+                    if tipo != "Saque" and tipo != "Deposito": #Podemos melhorar este método ou refinar no futuro
+                         classe = Fabrica_de_Movimento.criar_movimento(tipo)
+                         movimento_n = classe(tipo,status,data)
+                         movimentos_objetos.append(movimento_n)
+                    else:
+                         classe = Fabrica_de_Movimento.criar_movimento(tipo)
+                         movimento_n = classe(tipo,status,data, valor)
+                         movimentos_objetos.append(movimento_n)
           else:
                return movimentos_objetos
+          
           if len(movimento_trans) != 0:
                for movimento in movimento_trans:
                     tipo = movimento[2]

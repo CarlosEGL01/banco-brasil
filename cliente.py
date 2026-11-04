@@ -53,7 +53,3 @@ class Cliente:
         )
 
 
-
-list = []
-
-print(len(list))
