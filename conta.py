@@ -182,29 +182,34 @@ class Conta(ABC):
           self.__historico.append(movimento)
 
      def encerrar(self):
-
           if self.estado == "Fechada":
                raise ContaEncerradaError("A conta já está fechada!") 
           
           if self.saldo != 0:
                raise ContaNaoEncerradaError("Saldo ainda não foi zerado")
+
+          try:
+               cursor.execute("""
+               UPDATE conta SET estado = "Fechada"
+               WHERE numero = ?
+               """, (self.numero,))
+               if cursor.rowcount != 1:
+                    raise ContaEncerradaError("Deu um erro no encerramento!")
+               
+               cursor.execute("""
+                    INSERT INTO historico(numero_conta,operacao,status,data,valor)
+                    VALUES(?,"Encerramento","Sucesso",?,0)
+                    """, (self.numero, data_atual,))
+               conexao.commit()
+          except Exception:
+               conexao.rollback()
+               raise
           
           self.estado = "Fechada"
           movimento = Movimento("Encerramento", "Sucesso", data_atual)
           self.registrar_movimento(movimento)
 
-          cursor.execute("""
-          UPDATE conta SET estado = "Fechada"
-          WHERE numero = ?
-          """, (self.numero,))
-
-          cursor.execute("""
-               INSERT INTO historico(numero_conta,operacao,status,data,valor)
-               VALUES(?,"Encerramento","Sucesso",?,0)
-               """, (self.numero, data_atual,))
-          conexao.commit()
-
-          return True
+          return self
               
      def re_abertura(self):
           if self.estado != "Ativa":
@@ -244,9 +249,6 @@ Saldo Atual........................ R$ {saldo_formatado}
                     
      
                return extrato 
-
-     def consultar_movimentos(self):
-        cursor.execute("SELECT * FROM historico")
         
      
 class Conta_Corrente(Conta):

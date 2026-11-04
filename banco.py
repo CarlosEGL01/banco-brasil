@@ -222,7 +222,7 @@ class Banco:
             raise ContaNaoEncontradaError("Não encontramos a conta no sistema.")
         
         conta.encerrar()
-        return True
+        return conta
     
     """    
     def movimentos_das_contas(self):

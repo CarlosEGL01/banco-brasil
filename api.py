@@ -140,12 +140,28 @@ def consultar_conta(numero: int):
         "conta": conta.para_dict()
     }
 
-
-
-@app.post("/conta/depositar", status_code=201)
-def depositar_conta(conta: int, dinheiro: float):
+@app.get("/conta/{numero}/historico")
+def consultar_historico(numero: int):
     try:
-        conta = banco.buscar_conta(conta)
+        conta = banco.buscar_conta(numero)
+        historico = [movimento.para_dict() for movimento in conta.historico]
+
+    except ContaNaoEncontradaError as e:
+        raise HTTPException(status_code= 404, detail=str(e))
+    except BancoError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    return {
+        "mensagem": f"Bem-vindo a conta {numero}",
+        "total_movimentacoes": len(historico),
+        "historico": historico
+    }
+
+
+@app.post("/conta/{numero}depositar", status_code=201)
+def depositar_conta(numero: int, dinheiro: float):
+    try:
+        conta = banco.buscar_conta(numero)
         saldo_anterior = conta.saldo
         conta_atual = conta.depositar(dinheiro)
 
@@ -163,10 +179,10 @@ def depositar_conta(conta: int, dinheiro: float):
         "saldo atual: ": conta_atual.saldo,
         "conta": conta_atual.para_dict()
     }
-@app.post("/conta/sacar", status_code=201)
-def sacar_conta(conta: int, dinheiro: float):
+@app.post("/conta/{numero}/sacar", status_code=201)
+def sacar_conta(numero: int, dinheiro: float):
     try:
-        conta = banco.buscar_conta(conta)
+        conta = banco.buscar_conta(numero)
         saldo_anterior = conta.saldo
         conta_atual = conta.sacar(dinheiro)
     except ContaNaoEncontradaError as e:
@@ -187,7 +203,7 @@ def sacar_conta(conta: int, dinheiro: float):
     }
 
 
-@app.post("/banco/transferencia", status_code=201)
+@app.post("/banco/{num_origem}/{num_destino}/transferencia", status_code=201)
 def transferencia(num_origem: int, num_destino: int, valor: float):
     try:
         banco = Banco("Banco Do Brasil")
@@ -215,3 +231,23 @@ def transferencia(num_origem: int, num_destino: int, valor: float):
         "Historico Origem": conta_origem.historico[-1],
         "Historico Destino: ": conta_destino.historico[-1]
     }
+
+
+@app.patch("/banco/encerrar-conta/{num}")
+def encerrar_conta(num: int):
+    try:
+        conta = banco.encerrar_conta(num)
+    
+    except ContaNaoEncontradaError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ContaEncerradaError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    except ContaNaoEncerradaError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    except BancoError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+    return {
+        "mensagem": "Conta encerrada com sucesso",
+        "conta": conta.para_dict()
+    }
+
