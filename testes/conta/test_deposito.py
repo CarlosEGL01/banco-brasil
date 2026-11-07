@@ -1,25 +1,25 @@
 import unittest
-from conta import Conta_Corrente
-from banco import Banco
+import os
+os.environ["BANCO_DB_PATH"] = "banco-testes.db"
+
 from cliente import Cliente, Endereco
 from excecoes import ContaEncerradaError
-import sqlite3
-
-conexao = sqlite3.connect("banco.db")
-
-cursor = conexao.cursor()
-conexao.execute("PRAGMA foreign_key = ON")
+import banco
+from banco import Banco
 
 
 def apagar_dados_listas_sqlite():
-    cursor.execute("DELETE FROM cliente")
-    cursor.execute("DELETE FROM endereco")
-    cursor.execute("DELETE FROM conta")
-    cursor.execute("DELETE FROM historico")
-    cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'historico'")
-    cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'cliente'")
-    cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'endereco'")
-    conexao.commit()
+    banco.cursor.execute("DELETE FROM endereco")
+    banco.cursor.execute("DELETE FROM historico")
+    banco.cursor.execute("DELETE FROM historico_transferencia")
+    banco.cursor.execute("DELETE FROM conta")
+    banco.cursor.execute("DELETE FROM cliente") #Coloco aqui porque ele é a principal chave strangeira, daria error de integridade .
+    banco.cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'historico'")
+    banco.cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'cliente'")
+    banco.cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'endereco'")
+    banco.cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'historico_transferencia'")
+    banco.conexao.commit()
+
 
 
 class TestConta(unittest.TestCase):

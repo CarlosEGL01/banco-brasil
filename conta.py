@@ -1,16 +1,24 @@
 from abc import ABC, abstractmethod
-from movimento import Movimento, Movimento_Deposito, Movimento_Saque, Movimento_Transferencia, Fabrica_de_Movimento
+from movimento import Movimento, Movimento_Deposito, Movimento_Saque, Fabrica_de_Movimento
 from excecoes import SaldoInsuficienteError, ContaEncerradaError, BancoError, CreditoInsuficienteError, ContaNaoEncerradaError, ContaNaoEncontradaError
 import locale
+from datetime import datetime, date
 
 # Define a configuração para o padrão do Brasil
 locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
 import sqlite3
+
 conexao = sqlite3.connect("banco.db", check_same_thread=False)
 conexao.execute("PRAGMA foreign_key = ON")
 cursor = conexao.cursor()
 
-data_atual = "07/07/2026"
+
+#Horario
+hoje = date.today()
+data_atual = datetime.strftime(hoje, "%d/%m/%Y")
+
+
+
 class Conta(ABC):
      def __init__(self,cliente, numero):
           self.cliente = cliente
@@ -140,7 +148,14 @@ class Conta(ABC):
                resultado_movimentos = cursor.fetchall()
                return resultado_movimentos
 
-    
+          if tipo == "Transferencia Recebida" or tipo == "Transferencia Enviada":
+
+               cursor.execute("""
+                         SELECT * FROM historico_transferencia
+                         WHERE numero_conta = ? AND operacao = ?
+                         """, (self.numero, tipo,))
+               resultado_movimentos = cursor.fetchall()
+               return resultado_movimentos
           
           cursor.execute("""
           SELECT * FROM historico

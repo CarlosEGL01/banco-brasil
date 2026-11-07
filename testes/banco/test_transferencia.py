@@ -1,25 +1,25 @@
 import unittest
-from banco import Banco
+import os 
+
+os.environ["BANCO_DB_PATH"] = "banco-testes.db"
+
 from cliente import Cliente, Endereco
-from excecoes import BancoError, ClienteNaoEncontradoError, MesmaContaError, ContaNaoEncontradaError, SaldoInsuficienteError
-from conta import Fabrica_de_Contas
-import sqlite3
-
-conexao = sqlite3.connect("banco.db")
-
-cursor = conexao.cursor()
-conexao.execute("PRAGMA foreign_key = ON")
-
+from excecoes import BancoError, ContaNaoEncontradaError, SaldoInsuficienteError
+import banco
+from banco import Banco
 
 def apagar_dados_listas_sqlite():
-    cursor.execute("DELETE FROM cliente")
-    cursor.execute("DELETE FROM endereco")
-    cursor.execute("DELETE FROM conta")
-    cursor.execute("DELETE FROM historico")
-    cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'historico'")
-    cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'cliente'")
-    cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'endereco'")
-    conexao.commit()
+    banco.cursor.execute("DELETE FROM endereco")
+    banco.cursor.execute("DELETE FROM historico")
+    banco.cursor.execute("DELETE FROM historico_transferencia")
+    banco.cursor.execute("DELETE FROM conta")
+    banco.cursor.execute("DELETE FROM cliente") #Coloco aqui porque ele é a principal chave strangeira, daria error de integridade .
+    banco.cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'historico'")
+    banco.cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'cliente'")
+    banco.cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'endereco'")
+    banco.cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'historico_transferencia'")
+    banco.conexao.commit()
+
 
 
 #TEST TRANSFERENCIAS
@@ -83,14 +83,13 @@ class testes_transferencia(unittest.TestCase):
         with self.assertRaises(BancoError):
             self.banco.transferencia(1,1,120)
 
+    
     def test_registrou_movimento_na_conta_origem(self):
         self.banco.transferencia(1,2,250)
         #ACHAR O MOVIMENTO DE TRANSFERENCIA RECIBIDA
         conta_1 = self.banco.buscar_conta(1) 
         resultado_conta1 = conta_1.consultar_historico("Transferencia Enviada")
         ultimo_movimento = resultado_conta1[-1]
-        print(ultimo_movimento)
-            
         self.assertEqual(ultimo_movimento[2], "Transferencia Enviada")
 
 

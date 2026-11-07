@@ -2,14 +2,28 @@ from conta import Fabrica_de_Contas
 from movimento import Fabrica_de_Movimento
 from cliente import Cliente, Endereco
 from excecoes import BancoError, ClienteNaoEncontradoError, ContaNaoEncontradaError, MesmaContaError, SaldoInsuficienteError,  ContaEncerradaError, ContaNaoEncerradaError
+from datetime import datetime, date
 
-data_atual = "13/10/2026"
+#Horario
+hoje = date.today()
+data_atual = datetime.strftime(hoje, "%d/%m/%Y")
 
 import json
 import sqlite3
-conexao = sqlite3.connect("banco.db", check_same_thread=False) #Se agregou check_same_thread = false para que podermos fazer consultas no API.
+import os # É uma biblioteca que permite interagir com recursos do sistema operacional.
+
+CAMINHO_BANCO = os.getenv("BANCO_DB_PATH", "banco.db") #Entre suas funcionalidades, podemos acessar variáveis de ambiente.
+conexao = sqlite3.connect(
+    CAMINHO_BANCO,
+    check_same_thread=False
+)
+
 conexao.execute("PRAGMA foreign_keys = ON")
 cursor = conexao.cursor()
+#Conexao desse jeito será suspensa
+"""conexao = sqlite3.connect("banco.db", check_same_thread=False) #Se agregou check_same_thread = false para que podermos fazer consultas no API.
+conexao.execute("PRAGMA foreign_keys = ON")
+cursor = conexao.cursor()"""
 
 
 
@@ -287,8 +301,8 @@ class Banco:
 
         resultado_cliente = cursor.fetchone()
 
-        if resultado_cliente is None:
-            raise ClienteNaoEncontradoError("Esse cliente não está na base de dados!")
+        if resultado_cliente is None: 
+            return None 
         
         cursor.execute("""
         SELECT * from endereco

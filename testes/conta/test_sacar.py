@@ -4,7 +4,7 @@ from cliente import Cliente, Endereco
 from excecoes import ContaEncerradaError, SaldoInsuficienteError
 import sqlite3
 
-conexao = sqlite3.connect("banco.db")
+conexao = sqlite3.connect("banco-testes.db")
 
 cursor = conexao.cursor()
 conexao.execute("PRAGMA foreign_key = ON")
@@ -15,9 +15,11 @@ def apagar_dados_listas_sqlite():
     cursor.execute("DELETE FROM endereco")
     cursor.execute("DELETE FROM conta")
     cursor.execute("DELETE FROM historico")
+    cursor.execute("DELETE FROM historico_transferencia")
     cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'historico'")
     cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'cliente'")
     cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'endereco'")
+    cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'historico_transferencia'")
     conexao.commit()
 
 

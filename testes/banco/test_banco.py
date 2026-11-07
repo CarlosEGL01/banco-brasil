@@ -1,43 +1,45 @@
 import unittest
-from banco import Banco
+import os 
+os.environ["BANCO_DB_PATH"] = "banco-testes.db" 
+
 from cliente import Cliente, Endereco
-from excecoes import BancoError, ClienteNaoEncontradoError, MesmaContaError, ContaNaoEncontradaError, SaldoInsuficienteError
-from conta import Fabrica_de_Contas
-import sqlite3
+from excecoes import BancoError, ClienteNaoEncontradoError, MesmaContaError
+import banco
+from banco import Banco
 
-conexao = sqlite3.connect("banco.db")
-
-cursor = conexao.cursor()
-conexao.execute("PRAGMA foreign_key = ON")
 
 
 def apagar_dados_listas_sqlite():
-    cursor.execute("DELETE FROM cliente")
-    cursor.execute("DELETE FROM endereco")
-    cursor.execute("DELETE FROM conta")
-    cursor.execute("DELETE FROM historico")
-    cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'historico'")
-    cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'cliente'")
-    cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'endereco'")
-    conexao.commit()
+    banco.cursor.execute("DELETE FROM endereco")
+    banco.cursor.execute("DELETE FROM historico")
+    banco.cursor.execute("DELETE FROM historico_transferencia")
+    banco.cursor.execute("DELETE FROM conta") #Coloco aqui porque ele é a principal chave strangeira, daria error de integridade .
+    banco.cursor.execute("DELETE FROM cliente")
+    banco.cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'historico'")
+    banco.cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'cliente'")
+    banco.cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'endereco'")
+    banco.cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'historico_transferencia'")
+    banco.conexao.commit()
 
 
 class testes_Banco(unittest.TestCase):
     def setUp(self):
         apagar_dados_listas_sqlite()
         self.banco = Banco("Nubank")
+        #Enderecos
         self.endereco = Endereco("Jairo Nunes","Metropol", "Criciuma", "8882424")
         self.endereco1 = Endereco("Rua Interlagos","Recanto Verde", "Criciuma", "8881010")
+        #Clientes
         self.cliente = Cliente("Carlos", 11407147242, 92995096070, self.endereco)
         self.cliente1 = Cliente("Rafaela", 11012030412, 48329134242, self.endereco1)
-
+        #Cadastro
         self.banco.cadastrar_cliente(self.cliente1)
                 
     def test_cadastrar_cliente_com_sucesso(self):
         cliente = self.banco.cadastrar_cliente(self.cliente) # Faz o cadastro
         cliente_encontrado = self.banco.buscar_cliente(cliente.cpf) #Procuramos cliente na basse de dados
         self.assertEqual(cliente.cpf, cliente_encontrado.cpf)
-
+    
     def test_cadastrar_cliente_ja_cadastrado_lanca_excecao(self): 
         with self.assertRaises(BancoError):
             self.banco.cadastrar_cliente(self.cliente1)
