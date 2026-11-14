@@ -1,66 +1,52 @@
 import unittest
 import os 
-
 os.environ["BANCO_DB_PATH"] = "banco-testes.db"
-
 from cliente import Cliente, Endereco
-from excecoes import BancoError, ContaNaoEncontradaError, SaldoInsuficienteError
-import banco
 from banco import Banco
-
-def apagar_dados_listas_sqlite():
-    banco.cursor.execute("DELETE FROM endereco")
-    banco.cursor.execute("DELETE FROM historico")
-    banco.cursor.execute("DELETE FROM historico_transferencia")
-    banco.cursor.execute("DELETE FROM conta")
-    banco.cursor.execute("DELETE FROM cliente") #Coloco aqui porque ele é a principal chave strangeira, daria error de integridade .
-    banco.cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'historico'")
-    banco.cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'cliente'")
-    banco.cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'endereco'")
-    banco.cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'historico_transferencia'")
-    banco.conexao.commit()
+from database import apagar_dados_sqlite
+from excecoes import BancoError, SaldoInsuficienteError, ContaNaoEncontradaError
 
 
-
+apagar_dados_sqlite()
 #TEST TRANSFERENCIAS
 class testes_transferencia(unittest.TestCase):
     def setUp(self):
-        apagar_dados_listas_sqlite()
-
-        self.banco = Banco("Nubank")
+        apagar_dados_sqlite()
+        self.banco = Banco("Bradesco")
         self.endereco = Endereco("Jairo Nunes","Metropol", "Criciuma", 8882424)
         self.endereco1 = Endereco("Rua Interlagos","Recanto Verde", "Criciuma", 8881010)
-        self.cliente = Cliente("Carlos", 11407147242, 92995096070, self.endereco)
+        self.cliente = Cliente("Carlos Francisco", 11407147242, 92995096070, self.endereco)
         self.cliente1 = Cliente("Rafaela", 11012030412, 48329134242, self.endereco1)
         
         self.banco.cadastrar_cliente(self.cliente)
         self.banco.cadastrar_cliente(self.cliente1)
-        self.conta_x = self.banco.abrir_conta(self.cliente,"Conta_Corrente")
-        self.conta_z = self.banco.abrir_conta(self.cliente1, "Conta_Corrente")
 
+        self.banco.abrir_conta(self.cliente,"Conta_Corrente")
+        self.banco.abrir_conta(self.cliente1, "Conta_Corrente")
+
+        self.conta_x = self.banco.buscar_conta(1) # 1000
+        self.conta_z = self.banco.buscar_conta(2) # 329.30
         self.conta_x.depositar(1000)
-        self.conta_z.depositar(329.30)
+        
 
+  
 
-    def criar_cliente(self):
-        endereco = Endereco("Luis", "Sao Luiz", "Imaginação", 3333333)
-        cliente = Cliente("Eduard", 11111111, 2222222, endereco)
+    def tearDown(self):
+        apagar_dados_sqlite()
 
-        return cliente
-
-
+  
     def test_transferencia_com_sucesso(self):
-        
-        saldo_x_atual = self.conta_x.saldo # 1000
-        saldo_z_atual = self.conta_z.saldo # 329.30
-        valor = 150
-        self.banco.transferencia(1,2,valor)
-        
-        conta_x = self.banco.buscar_conta(1)
-        conta_z = self.banco.buscar_conta(2)
-        self.assertEqual(conta_x.saldo, (saldo_x_atual - valor))
-        self.assertEqual(conta_z.saldo, (valor + saldo_z_atual))
 
+        saldo1_antigo = self.conta_x.saldo
+        saldo2_antigo = self.conta_z.saldo
+        valor = 150
+        self.banco.transferencia(self.conta_x.numero,self.conta_z.numero,valor)
+        
+        conta1_atual = self.banco.buscar_conta(1)
+        conta2_atual = self.banco.buscar_conta(2)
+        self.assertEqual(conta1_atual.saldo, (saldo1_antigo - valor))
+        self.assertEqual(conta2_atual.saldo, (valor + saldo2_antigo))
+    
     def test_transferencia_falho_saldo_insuficiente_error(self):
         with self.assertRaises(SaldoInsuficienteError):
             self.banco.transferencia(1,2,1200)

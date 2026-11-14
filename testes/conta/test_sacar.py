@@ -1,35 +1,26 @@
 import unittest
+import os
+os.environ["BANCO_DB_PATH"] = "banco-testes.db"
+
 from conta import Conta_Corrente
 from cliente import Cliente, Endereco
 from excecoes import ContaEncerradaError, SaldoInsuficienteError
-import sqlite3
-
-conexao = sqlite3.connect("banco-testes.db")
-
-cursor = conexao.cursor()
-conexao.execute("PRAGMA foreign_key = ON")
-
-
-def apagar_dados_listas_sqlite():
-    cursor.execute("DELETE FROM cliente")
-    cursor.execute("DELETE FROM endereco")
-    cursor.execute("DELETE FROM conta")
-    cursor.execute("DELETE FROM historico")
-    cursor.execute("DELETE FROM historico_transferencia")
-    cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'historico'")
-    cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'cliente'")
-    cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'endereco'")
-    cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'historico_transferencia'")
-    conexao.commit()
+from banco import Banco
+from database import apagar_dados_sqlite
 
 
 class TestConta(unittest.TestCase):
     def setUp(self):
-        apagar_dados_listas_sqlite()
+        apagar_dados_sqlite() #Apagamos os dados antes
+        self.banco = Banco("Nunbak")
         self.endereco = Endereco("Jairo Nunes","Metropol", "Criciuma", 8881010)
         self.cliente = Cliente("Carlos", 11407147242, 92995096070, self.endereco)
-        self.conta = Conta_Corrente(self.cliente, 1)
+        self.banco.cadastrar_cliente(self.cliente)
+        self.conta = self.banco.abrir_conta(self.cliente, "Conta_Corrente")
+        
         self.conta.depositar(200)
+    def tearDown(self):
+        apagar_dados_sqlite() #Apagamos os dados depois para deixar zerada as tabelas
     def test_sacar_dinheiro_conta_encerrada_lanca_excecao(self):
         self.conta.saldo = 0 #Segundo meu programa uma conta encerrada deveria estar zerada.
         self.conta.encerrar() 

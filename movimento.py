@@ -1,9 +1,6 @@
 import locale
 import sqlite3
-conexao = sqlite3.connect("banco.db", check_same_thread=False)
-conexao.execute("PRAGMA foreign_key = ON")
-cursor = conexao.cursor()
-
+from database import cursor
 # Define a configuração para o padrão do Brasil
 locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
 class Movimento:
@@ -130,7 +127,7 @@ class Fabrica_de_Movimento():
                movimento_trans = cursor.fetchall()          
           except sqlite3.Error as e:
                print(e)
-          if len(movimentos) != 0:
+          if len(movimentos) != 0: #MOvimento[0] != 0 TRUE
                for movimento in movimentos:
                     tipo = movimento[2]
                     status = movimento[3]
@@ -144,8 +141,6 @@ class Fabrica_de_Movimento():
                          classe = Fabrica_de_Movimento.criar_movimento(tipo)
                          movimento_n = classe(tipo,status,data, valor)
                          movimentos_objetos.append(movimento_n)
-          else:
-               return movimentos_objetos
           
           if len(movimento_trans) != 0:
                for movimento in movimento_trans:
@@ -167,12 +162,10 @@ class Fabrica_de_Movimento():
                          movimento_n = classe(tipo, status, data, origem, destino,valor)
                          movimentos_objetos.append(movimento_n)
 
-          else:
-               return movimentos_objetos
-
           return movimentos_objetos
+     
 
-if __name__ == "__main__":
-    lista = Fabrica_de_Movimento.restaurar_historico(2)
+#if __name__ == "__main__":
+    #lista = Fabrica_de_Movimento.restaurar_historico(2)
 
     

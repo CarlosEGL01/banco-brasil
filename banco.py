@@ -1,7 +1,7 @@
-from conta import Fabrica_de_Contas
-from movimento import Fabrica_de_Movimento
 from cliente import Cliente, Endereco
-from excecoes import BancoError, ClienteNaoEncontradoError, ContaNaoEncontradaError, MesmaContaError, SaldoInsuficienteError,  ContaEncerradaError, ContaNaoEncerradaError
+from movimento import Fabrica_de_Movimento
+from conta import Fabrica_de_Contas
+from excecoes import BancoError, ClienteNaoEncontradoError, ContaNaoEncontradaError, MesmaContaError, SaldoInsuficienteError,  ContaEncerradaError
 from datetime import datetime, date
 
 #Horario
@@ -9,23 +9,7 @@ hoje = date.today()
 data_atual = datetime.strftime(hoje, "%d/%m/%Y")
 
 import json
-import sqlite3
-import os # É uma biblioteca que permite interagir com recursos do sistema operacional.
-
-CAMINHO_BANCO = os.getenv("BANCO_DB_PATH", "banco.db") #Entre suas funcionalidades, podemos acessar variáveis de ambiente.
-conexao = sqlite3.connect(
-    CAMINHO_BANCO,
-    check_same_thread=False
-)
-
-conexao.execute("PRAGMA foreign_keys = ON")
-cursor = conexao.cursor()
-#Conexao desse jeito será suspensa
-"""conexao = sqlite3.connect("banco.db", check_same_thread=False) #Se agregou check_same_thread = false para que podermos fazer consultas no API.
-conexao.execute("PRAGMA foreign_keys = ON")
-cursor = conexao.cursor()"""
-
-
+from database import conexao, cursor, apagar_dados_sqlite #Modularizamos o banco de dados.
 
 class Banco:
     def __init__(self, nome):

@@ -2,15 +2,13 @@ from abc import ABC, abstractmethod
 from movimento import Movimento, Movimento_Deposito, Movimento_Saque, Fabrica_de_Movimento
 from excecoes import SaldoInsuficienteError, ContaEncerradaError, BancoError, CreditoInsuficienteError, ContaNaoEncerradaError, ContaNaoEncontradaError
 import locale
-from datetime import datetime, date
 
+from datetime import datetime, date
+import database as banco
 # Define a configuração para o padrão do Brasil
 locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
-import sqlite3
 
-conexao = sqlite3.connect("banco.db", check_same_thread=False)
-conexao.execute("PRAGMA foreign_key = ON")
-cursor = conexao.cursor()
+import sqlite3
 
 
 #Horario
@@ -81,23 +79,23 @@ class Conta(ABC):
           elif valor > 0:
                total = self.__saldo + valor
                try:
-                    cursor.execute("""
+                    banco.cursor.execute("""
                          UPDATE conta
                          SET saldo = ?
                          Where numero = ?
                     """, (total, self.numero,))
                     #Essa linha de comando conferi se houve uma alteração na linha do SQL, caso contrario fosse 0 não permite inserir o registro no historico
-                    if cursor.rowcount != 1:
+                    if banco.cursor.rowcount != 1:
                          raise ContaNaoEncontradaError("Não foi possível atualizar a conta.")
                     
-                    cursor.execute("""
+                    banco.cursor.execute("""
                          INSERT INTO historico(numero_conta, operacao,status,data,valor)
                          VALUES(?,"Deposito", "Sucesso", ?, ?)
                     """, (self.numero,data_atual,valor,))
-                    conexao.commit()
+                    banco.conexao.commit()
                except sqlite3.Error as e:
                     print(e)
-                    conexao.rollback()
+                    banco.conexao.rollback()
                     raise
                
                self.__saldo += valor
@@ -123,18 +121,18 @@ class Conta(ABC):
                total_final = self.__saldo - total
                try:
                     #Guardando operação
-                    cursor.execute("UPDATE conta SET saldo = ? WHERE numero = ?", (total_final, self.numero))
-                    if cursor.rowcount != 1:
+                    banco.cursor.execute("UPDATE conta SET saldo = ? WHERE numero = ?", (total_final, self.numero))
+                    if banco.cursor.rowcount != 1:
                          raise ContaNaoEncontradaError("Não foi possivel atualizar a conta.")
                     #HISTORICO AO SQL
-                    cursor.execute("""
+                    banco.cursor.execute("""
                          INSERT INTO historico(numero_conta,operacao,status,data,valor)
                          VALUES(?,"Saque","Sucesso",?,?)
                     """, (self.numero, data_atual, total,))
-                    conexao.commit()
+                    banco.conexao.commit()
                except sqlite3.Error as e:
                     print(e)
-                    conexao.rollback()
+                    banco.conexao.rollback()
                     raise
                self.__saldo -= total
                novo_movimento = Movimento_Saque("Saque","Sucesso",data_atual, total) 
@@ -144,25 +142,25 @@ class Conta(ABC):
 
      def consultar_historico(self,tipo=""):
           if tipo == "":
-               cursor.execute("SELECT * FROM historico WHERE numero_conta = ?", (self.numero,))
-               resultado_movimentos = cursor.fetchall()
+               banco.cursor.execute("SELECT * FROM historico WHERE numero_conta = ?", (self.numero,))
+               resultado_movimentos = banco.cursor.fetchall()
                return resultado_movimentos
 
           if tipo == "Transferencia Recebida" or tipo == "Transferencia Enviada":
 
-               cursor.execute("""
+               banco.cursor.execute("""
                          SELECT * FROM historico_transferencia
                          WHERE numero_conta = ? AND operacao = ?
                          """, (self.numero, tipo,))
-               resultado_movimentos = cursor.fetchall()
+               resultado_movimentos = banco.cursor.fetchall()
                return resultado_movimentos
           
-          cursor.execute("""
+          banco.cursor.execute("""
           SELECT * FROM historico
           WHERE numero_conta = ? AND operacao = ?
           """, (self.numero, tipo,))
 
-          resultado_movimentos = cursor.fetchall()
+          resultado_movimentos = banco.cursor.fetchall()
 
           return resultado_movimentos
 
@@ -171,7 +169,7 @@ class Conta(ABC):
           return self.saldo #Num X
 
      def informacoes(self):
-          cursor.execute("""
+          banco.cursor.execute("""
                SELECT 
                conta.numero,
                cliente.nome,
@@ -185,7 +183,7 @@ class Conta(ABC):
                WHERE conta.numero = ?
           """, (self.numero, ))
 
-          return cursor.fetchone()
+          return banco.cursor.fetchone()
 
      @abstractmethod
      def calcular_tarifa(self,valor):
@@ -204,20 +202,20 @@ class Conta(ABC):
                raise ContaNaoEncerradaError("Saldo ainda não foi zerado")
 
           try:
-               cursor.execute("""
+               banco.cursor.execute("""
                UPDATE conta SET estado = "Fechada"
                WHERE numero = ?
                """, (self.numero,))
-               if cursor.rowcount != 1:
+               if banco.cursor.rowcount != 1:
                     raise ContaEncerradaError("Deu um erro no encerramento!")
                
-               cursor.execute("""
+               banco.cursor.execute("""
                     INSERT INTO historico(numero_conta,operacao,status,data,valor)
                     VALUES(?,"Encerramento","Sucesso",?,0)
                     """, (self.numero, data_atual,))
-               conexao.commit()
+               banco.conexao.commit()
           except Exception:
-               conexao.rollback()
+               banco.conexao.rollback()
                raise
           
           self.estado = "Fechada"
@@ -230,20 +228,20 @@ class Conta(ABC):
           if self.estado == "Ativa":
                raise ContaNaoEncerradaError("Essa conta já esta ativa!")
           try:
-               cursor.execute("""
+               banco.cursor.execute("""
                          UPDATE conta SET estado = "Ativa"
                          WHERE numero = ?
                          """, (self.numero,))
-               if cursor.rowcount != 1:
+               if banco.cursor.rowcount != 1:
                     raise ContaNaoEncontradaError("Não conseguimos localizar a conta e atualizar o estatus")
                     
-               cursor.execute("""
+               banco.cursor.execute("""
                          INSERT INTO historico(numero_conta,operacao,status,data,valor)
                          VALUES(?,"Re-Abertura","Sucesso",?,0)
                          """, (self.numero, data_atual,))
-               conexao.commit()
+               banco.conexao.commit()
           except Exception:
-               conexao.rollback()
+               banco.conexao.rollback()
                raise 
                
 

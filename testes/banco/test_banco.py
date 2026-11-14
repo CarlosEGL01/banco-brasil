@@ -4,27 +4,14 @@ os.environ["BANCO_DB_PATH"] = "banco-testes.db"
 
 from cliente import Cliente, Endereco
 from excecoes import BancoError, ClienteNaoEncontradoError, MesmaContaError
-import banco
 from banco import Banco
+from database import apagar_dados_sqlite
 
 
-
-def apagar_dados_listas_sqlite():
-    banco.cursor.execute("DELETE FROM endereco")
-    banco.cursor.execute("DELETE FROM historico")
-    banco.cursor.execute("DELETE FROM historico_transferencia")
-    banco.cursor.execute("DELETE FROM conta") #Coloco aqui porque ele é a principal chave strangeira, daria error de integridade .
-    banco.cursor.execute("DELETE FROM cliente")
-    banco.cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'historico'")
-    banco.cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'cliente'")
-    banco.cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'endereco'")
-    banco.cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'historico_transferencia'")
-    banco.conexao.commit()
 
 
 class testes_Banco(unittest.TestCase):
     def setUp(self):
-        apagar_dados_listas_sqlite()
         self.banco = Banco("Nubank")
         #Enderecos
         self.endereco = Endereco("Jairo Nunes","Metropol", "Criciuma", "8882424")
@@ -34,6 +21,9 @@ class testes_Banco(unittest.TestCase):
         self.cliente1 = Cliente("Rafaela", 11012030412, 48329134242, self.endereco1)
         #Cadastro
         self.banco.cadastrar_cliente(self.cliente1)
+
+    def tearDown(self):
+        apagar_dados_sqlite()
                 
     def test_cadastrar_cliente_com_sucesso(self):
         cliente = self.banco.cadastrar_cliente(self.cliente) # Faz o cadastro
