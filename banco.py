@@ -391,7 +391,7 @@ class Banco:
         return resultado
     
     def transferencia(self,num_origem,num_destino, valor):
-        if valor <= 0:
+        if isinstance(valor, str) or valor <= 0:
             raise ValueError("Digite um valor válido")
         
         conta_origem = self.buscar_conta(num_origem)

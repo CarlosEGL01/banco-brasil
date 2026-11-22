@@ -108,7 +108,7 @@ class Conta(ABC):
      def sacar(self,valor): 
           if self.estado != "Ativa":
                raise ContaEncerradaError("Não pode fazer esse movimento. CONTA ENCERRADA!")
-          if isinstance(valor, str) or valor <= 0  :
+          if isinstance(valor, str) or valor <= 0 :
                raise ValueError("Número Inválido")
           if valor > self.__saldo: 
                raise SaldoInsuficienteError("Não tem saldo para tirar esse valor")
@@ -329,8 +329,11 @@ class Conta_Universitaria(Conta):
      def saldo_disponivel(self):
           return self.saldo + self.credito_disponivel
      def sacar(self, valor):
-          #if isinstance(valor, str): 
-          #     raise ValueError("Você não digitou números")
+          if isinstance(valor, str) or valor <= 0: 
+               raise ValueError("Você não digitou números")
+          if self.estado != "Ativa":
+               raise ContaNaoEncerradaError("Não pode fazer esse movimento. CONTA ENCERRADA!")
+          
           if valor > self.saldo and valor > self.credito_disponivel:
                raise SaldoInsuficienteError("Saldo insuficiente, e credito insuficientes")
           

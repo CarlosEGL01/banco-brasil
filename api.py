@@ -18,7 +18,7 @@ def verificar_status():
         "aplicacao": "Banco Brasil",
         "status": "operacional"
     }
-
+#--------------Entrada de dados com pydantic--------------------------
 class EnderecoEntrada(BaseModel):
     rua: str = Field(min_length=1, max_length=100)
     bairro: str = Field(min_length=1, max_length=100)
@@ -41,7 +41,9 @@ class ClienteEntrada(BaseModel):
             raise ValueError("O nome não pode estar vazio.")
 
         return valor
+#---------------------------------------------------------------
 
+#-----------Cadastro Client POST-------------------------
 banco = Banco("Banco Brasil")
 @app.post("/clientes", status_code=201)
 def cadastrar_cliente(dados: ClienteEntrada):
@@ -68,7 +70,7 @@ def cadastrar_cliente(dados: ClienteEntrada):
         "mensagem": "Cliente cadastrado com sucesso",
         "cliente": cliente_cadastrado.para_dict()
     }
-
+#----------Consultas Clientes GET ----------------------
 @app.get("/clientes/{cpf}")
 def consultar_cliente(cpf: str):
     cliente = banco.buscar_cliente(cpf)
@@ -103,14 +105,13 @@ def consultar_contas_cliente(cpf: str):
             for conta in contas
         ]
     }
-
-
-
-
+#----------------Cadastrar Contas POST--------------------
 @app.post("/clientes/{cpf}/cadastrar-conta",status_code=201)
 def cadastrar_conta(cpf: str, tipo: str):
     try:
         cliente = banco.buscar_cliente(cpf)
+        if cliente is None:
+            raise ClienteNaoEncontradoError("Cliente inexistente") 
         conta = banco.abrir_conta(cliente, tipo)
     except ClienteNaoEncontradoError as erro:
         raise HTTPException(status_code=404, detail=str(erro))
@@ -122,18 +123,16 @@ def cadastrar_conta(cpf: str, tipo: str):
         "mensagem": "Conta criada com sucesso",
         "cliente": conta.para_dict()
     }
-
     
-
+#---------------Consultas contas e hitorico GET---------------------
 @app.get("/conta/{numero}")
 def consultar_conta(numero: int):
     try:
         conta = banco.buscar_conta(numero)
-
+        if conta is None:
+            raise ContaNaoEncontradaError("Não encontramos a conta na nossa base de dados")
     except ContaNaoEncontradaError as e:
         raise HTTPException(status_code= 404, detail=str(e))
-    except BancoError as e:
-        raise HTTPException(status_code=400, detail=str(e))
 
     return {
         "mensagem": f"Bem-vindo a conta {numero}",
@@ -144,24 +143,26 @@ def consultar_conta(numero: int):
 def consultar_historico(numero: int):
     try:
         conta = banco.buscar_conta(numero)
+        if conta is None:
+            raise ContaNaoEncontradaError("Não encontramos a conta na nossa base de dados")
+        
         historico = [movimento.para_dict() for movimento in conta.historico]
 
     except ContaNaoEncontradaError as e:
         raise HTTPException(status_code= 404, detail=str(e))
-    except BancoError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
     return {
         "mensagem": f"Bem-vindo a conta {numero}",
         "total_movimentacoes": len(historico),
         "historico": historico
     }
 
-
-@app.post("/conta/{numero}depositar", status_code=201)
+#------------DEPOSITAR------------------
+@app.post("/conta/{numero}/depositar", status_code=201)
 def depositar_conta(numero: int, dinheiro: float):
     try:
         conta = banco.buscar_conta(numero)
+        if conta is None:
+            raise ContaNaoEncontradaError("Não encontramos a conta na nossa base de dados")
         saldo_anterior = conta.saldo
         conta_atual = conta.depositar(dinheiro)
 
@@ -170,19 +171,21 @@ def depositar_conta(numero: int, dinheiro: float):
     except ContaEncerradaError as e:
         raise HTTPException(status_code=409, detail=str(e))
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=422, detail=str(e))
     except BancoError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return {
-        "mensagem: ": " Deposito com sucesso.",
+        "mensagem": " Deposito com sucesso.",
         "saldo anterior": saldo_anterior,
-        "saldo atual: ": conta_atual.saldo,
+        "saldo atual ": conta_atual.saldo,
         "conta": conta_atual.para_dict()
     }
 @app.post("/conta/{numero}/sacar", status_code=201)
 def sacar_conta(numero: int, dinheiro: float):
     try:
         conta = banco.buscar_conta(numero)
+        if conta is None:
+            raise ContaNaoEncontradaError("Não encontramos a conta na nossa base de dados")
         saldo_anterior = conta.saldo
         conta_atual = conta.sacar(dinheiro)
     except ContaNaoEncontradaError as e:
@@ -190,13 +193,13 @@ def sacar_conta(numero: int, dinheiro: float):
     except ContaEncerradaError as e:
         raise HTTPException(status_code=409, detail=str(e))
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=422, detail=str(e))
     except SaldoInsuficienteError as e:
         raise HTTPException(status_code=409, detail=str(e))
     except BancoError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return {
-        "mensagem: ": " Saque com sucesso.",
+        "mensagem": " Saque com sucesso.",
         "saldo anterior": saldo_anterior,
         "saldo atual: ": conta_atual.saldo,
         "conta": conta_atual.para_dict()
@@ -218,7 +221,7 @@ def transferencia(num_origem: int, num_destino: int, valor: float):
     except ContaEncerradaError as e:
         raise HTTPException(status_code=409, detail=str(e))
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=422, detail=str(e))
     except MesmaContaError as e:
         raise HTTPException(status_code=409, detail=str(e))
     except SaldoInsuficienteError as e:
@@ -226,10 +229,10 @@ def transferencia(num_origem: int, num_destino: int, valor: float):
     except BancoError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return {
-        "mensagem: ": " Transferencia com sucesso.",
-        "valor da transacao: ": valor,
+        "mensagem": " Transferencia com sucesso.",
+        "valor da transacao": valor,
         "Historico Origem": conta_origem.historico[-1],
-        "Historico Destino: ": conta_destino.historico[-1]
+        "Historico Destino": conta_destino.historico[-1]
     }
 
 
@@ -252,7 +255,7 @@ def encerrar_conta(num: int):
     }
 
 @app.patch("/banco/reabertura-conta/{num}")
-def encerrar_conta(num: int):
+def reabertura_conta(num: int):
     try:
         conta = banco.reabertura_conta(num)
     
