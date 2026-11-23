@@ -75,8 +75,9 @@ def test_cadastrar_cliente_endereco_sem_endereco():
     assert resposta.status_code == 422
 
 def test_cadastrar_cliente_endereco_sem_cidade():
-    dados_invalidos = dados_cliente["endereco"].copy()
-    del dados_invalidos["cidade"]
+    dados_invalidos = dados_cliente.copy()
+    
+    del dados_invalidos["endereco"]["cidade"]
     
     resposta = client.post("/clientes", json=dados_invalidos)
     
@@ -133,7 +134,7 @@ def test_consultar_contas_cliente():
     assert resposta.json()["total_contas"] ==  1
 
 def test_consultar_contas_cliente_inexistente():
-    resposta = client.get("/clientes//contas")
+    resposta = client.get("/clientes/11111111111/contas")
 
     assert resposta.status_code == 404
 
@@ -160,6 +161,7 @@ def test_consultar_historico():
     
     assert resposta.status_code == 200
     assert resposta.json()["mensagem"] == f"Bem-vindo a conta {numero}"
+    assert resposta.json()["total_movimentacoes"] == 0
 
 #------TESTES Depositar POST --------
 
@@ -180,10 +182,10 @@ def test_depositar_conta_nao_encontrada():
     assert resposta.status_code == 404
 
 #Utilizar parametrize
-@pytest.mark.parametrize("valor_invalido", ["", "Oi", "1as", "-1"])
-def test_depositar_valor_invalido(valor_invalido):
+@pytest.mark.parametrize("valores_invalidos", ["", "Oi", "1as", "-1"])
+def test_depositar_valor_invalido(valores_invalidos):
     
-    resposta = client.post("/conta/1/depositar", params=valor_invalido)
+    resposta = client.post("/conta/1/depositar", params={"dinheiro": valores_invalidos})
 
     assert resposta.status_code == 422
 
@@ -255,7 +257,7 @@ def test_sacar_conta_encerrada():
 @pytest.mark.parametrize("valor_invalido", ["", "Oi", "1as", "-1"])
 def test_sacar_dinheiro_valores_invalidos(valor_invalido):
     
-    resposta = client.post("/conta/1/sacar", params=valor_invalido)
+    resposta = client.post("/conta/1/sacar", params={"dinheiro": valor_invalido})
 
     assert resposta.status_code == 422
 

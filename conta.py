@@ -332,7 +332,7 @@ class Conta_Universitaria(Conta):
           if isinstance(valor, str) or valor <= 0: 
                raise ValueError("Você não digitou números")
           if self.estado != "Ativa":
-               raise ContaNaoEncerradaError("Não pode fazer esse movimento. CONTA ENCERRADA!")
+               raise ContaEncerradaError("Não pode fazer esse movimento. CONTA ENCERRADA!")
           
           if valor > self.saldo and valor > self.credito_disponivel:
                raise SaldoInsuficienteError("Saldo insuficiente, e credito insuficientes")
